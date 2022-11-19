@@ -189,6 +189,7 @@ def estimate(x, s, gM, M, D, y, N, BEGIN, END):
     #gM = param T
     s, y = estsources(x, D, N, gM, BEGIN, END) # start with an estimate of s computed from the global model gM
     its = 0
+    #quit when source sequence is already seen
     while s not in prevsseqs:
         its += 1
         print('#{0}: Estimating parameters...'.format(its))
@@ -197,8 +198,8 @@ def estimate(x, s, gM, M, D, y, N, BEGIN, END):
         print('#{0}: Computing source sequence...'.format(its))
         s, y = estsources(x, D, N, M, BEGIN, END) # use current M to re-estimate s
     print('done estimate\n')
-    print(f's: \n{s}\n')
-    print(f'y: \n{y}')
+    #print(f's: \n{s}\n')
+    #print(f'y: \n{y}')
    
     return len(set(s)), M, y
 
@@ -215,12 +216,22 @@ def estsources(x, D, N, T, BEGIN, END):
     T = M a len(D) * len(D) nparray
     
     '''
-    s = []
+    #s = []
+    s = np.full((numSymbols, 1), -9, dtype=np.int)
+    sIdx = 0
     # list of lists
-    y = []
+    #y = []
+    # from formula 2^n - 1
+    numSetsPossible = (2**len(D)) -1 
+    y = np.zeros((numSetsPossible, numSymbols), dtype=np.int)
+    # tracks how many elements are added to each row of array
+    yLastIdxArr = np.full((numSetsPossible), -9, dtype=np.int)
+    lenY = 0 # tracks which row I'm adding sn to
     #y.append([])
     # set but now list use if x in active
-    active = []
+    maxLenActive = 2**numSymbols
+    activeIdx = 0 # track where to insert next in active
+    active = np.full((maxLenActive), -9, dtype=np.int)
     for n in range(0,N):
         #print(f'top leny: {len(y)}\n')
 
@@ -228,9 +239,14 @@ def estsources(x, D, N, T, BEGIN, END):
         pmax = 0.0
         sn = -1
         for k in active:
-            if xn in y[k]:
+            if xn in y[k, :]: #, :]:
                 continue
-            a = y[k][-1]
+            # check index
+            lastIdx = yLastIdxArr[k]-1
+            yLastIdxArr[k] += 1
+            #a = y[k][-1] # worked with lists y[k][-1] not knowing how many elements are in sublist, need to track how many in array
+            print(f'k:{k}, lastIdx: {lastIdx}')
+            a = y[k, lastIdx]
             b = xn
             p = T[a,b]
             if p > pmax:
@@ -238,39 +254,59 @@ def estsources(x, D, N, T, BEGIN, END):
                 pmax = p
         if sn == -1 or T[BEGIN, xn] > pmax:
             # making y longer by one subarray
+            
+            if lenY == 0:
+                lenY+=1
+                sn = lenY
+            else:
+                sn = lenY
+            '''
             if len(y) == 0:
                 sn = len(y) + 1
             else:
                 sn = len(y)
-            
+            '''
             if sn not in active:
-                active.append(sn)
+                active[activeIdx] = sn
+                activeIdx += 1
+                #active.append(sn)
             if sn == 1:
-                y.append([])
-                y.append([])
+                lenY+=1
+                lenY+=1
+                #y.append([])
+                #y.append([])
             else:
-                y.append([])
+                lenY+=1
+                #y.append([])
         #print(f'bottom leny: {len(y)}\n')
         #print(f'sn: {sn}\n')
-
-        s.append(sn)
+        s[sIdx] = sn
+        sIdx += 1
+        #s.append(sn)
         #print(f'y:\n{y}\n')
-        y[sn].append(xn)
+        idxToInsertTo = yLastIdxArr[sn]
+        yLastIdxArr[sn] += 1
+        y[sn, idxToInsertTo] = xn
+
+        #y[sn].append(xn)
         pnext = 0.0
         bnext = BEGIN
         # need to enumerate D
         for b in D:
             Txnb = T[xn,b]
             if Txnb > pnext:
-                pnext = T[xn][b]
+                pnext = T[xn,b] # was T[xn][b]
                 bnext = b
         if bnext == END:
             active = [x for x in active if x != sn]
-        print(f's: {s}\n')
+        #print(f's: {s}\n')
         print(f'y: {y}\n')
+        print('len active: ', len(active))
+        print('active: ', active)
 
     #take out the empty list in y
     y = [x for x in y if x != []]
+    print('end len y: ', len(y))
         
     return s, y
             
@@ -296,7 +332,7 @@ def estparams(D,y, BEGIN, END):
         M[a,b] += 1.0
     
     normM = normalizeGM(M)
-    print(f'M: {normM}')
+    #print(f'M: {normM}')
 
     return normM
 
@@ -340,7 +376,7 @@ def seqprobs(y):
             probs[z] += 1.0
         else:
             probs[z] = 1.0
-    print(f'raw probs: {probs}')
+    #print(f'raw probs: {probs}')
 
     normalize(probs)
     return probs
@@ -423,7 +459,19 @@ if __name__=="__main__":
     # max number of symbols in any value list is len(D)
     #{int: [unique symbols]}, use list of lists
     #y = dict() # the separate source sequences (y^{(k)} in the paper)
-    y = []
+    '''
+    most number of entries in y is going to be the number of permutations of the set of symbols D
+    https://math.stackexchange.com/a/1193956/635903
+    2^n - 1
+
+    '''
+    numSymbols = len(D)
+    numSetsFromD = (2**numSymbols) - 1
+    print('num sets from symbols: ', numSetsFromD)
+
+    #y = []
+    y = np.zeros((numSetsFromD, numSymbols), dtype=np.int)
+
     # estimate model, with all above member variables
     
     BEGIN = Ddict['o']
