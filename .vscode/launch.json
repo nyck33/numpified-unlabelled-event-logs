@@ -1,0 +1,19 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "~/Documents/ProcessMining/fresh/numpified-event-logs/Numpified.py",
+            //"program": "~/Documents/ProcessMining/fresh/unlabelled-event-logs/mimestCombined.py",
+            //"args": ["sequence.txt"],
+            //"args": ["20", "5", "example.txt", "sequence.txt"],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}

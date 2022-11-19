@@ -1,0 +1,51 @@
+Symbol sequence:  ACDEFAAACC
+(10 symbols)
+Initializing source sequence...
+#1: Estimating parameters...
+#1: Computing source sequence...
+#2: Estimating parameters...
+#2: Computing source sequence...
+model is ok: True
+      o     A     C     D     E     F     x     
+o     -     0.80  -     0.20  -     -     -     
+A     -     -     0.75  -     -     -     0.25  
+C     -     -     -     -     -     -     1.00  
+D     -     -     -     -     1.00  -     -     
+E     -     -     -     -     -     1.00  -     
+F     -     -     -     -     -     -     1.00  
+x     -     -     -     -     -     -     -     
+0.600 : AC
+0.200 : DEF
+0.200 : A
+Total number of sources: 5
+
+///////////////////////////////////////////////////
+
+mimestCombined.py
+Symbol sequence:  ACDEFAAACCDFDACCAFDDAEAFAGCDCEDFEACDCFHACDDFCFAFACAACDDCCDDEFFDEEFAAACDCCFADFECDEFGHEDAFBF
+(90 symbols)
+Initializing source sequence...
+#1: Estimating parameters...
+#1: Computing source sequence...
+#2: Estimating parameters...
+#2: Computing source sequence...
+model is ok: True
+      o     A     B     C     D     E     F     G     H     x     
+o     -     0.87  0.04  -     -     -     -     0.09  -     -     
+A     -     -     -     0.95  -     -     -     -     -     0.05  
+B     -     -     -     -     -     -     -     -     -     1.00  
+C     -     -     -     -     1.00  -     -     -     -     -     
+D     -     -     -     -     -     0.42  0.37  -     -     0.21  
+E     -     -     -     -     -     -     1.00  -     -     -     
+F     -     -     -     -     -     -     -     -     -     1.00  
+G     -     -     -     -     -     -     -     -     1.00  -     
+H     -     -     -     -     -     1.00  -     -     -     -     
+x     -     -     -     -     -     -     -     -     -     -     
+0.348 : ACDEF
+0.304 : ACDF
+0.174 : ACD
+0.087 : GHEF
+0.043 : A
+0.043 : B
+Total number of sources: 23
+
