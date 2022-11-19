@@ -1,3 +1,5 @@
+# based on https://github.com/diogoff/unlabelled-event-logs
+
 # Discovering Process Models from Unlabelled Event Logs
 
 This repository contains the source code for the paper [Discovering Process Models from Unlabelled Event Logs](http://web.tecnico.ulisboa.pt/diogo.ferreira/papers/ferreira09discovering.pdf) presented at the _7th International Conference on Business Process Management_ (BPM 2009) in Ulm, Germany, September 7-10, 2009.
