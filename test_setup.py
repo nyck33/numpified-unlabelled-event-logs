@@ -116,8 +116,6 @@ def test_estimate():
     MSol = MSolArr
     
 
-    
-
     K,M,y = estimate(startIntsX, s, gmStartArr, gmStartArr, 
                                 startIntsD, y, N, 0, 9)
 
