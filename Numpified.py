@@ -164,7 +164,48 @@ def normalizeGM(gM):
 
 # # Estimate
 
+#helpers for estsources
+def stripYAndYColIdxsArrs(y, yColIdxs):
+    rows, _ = np.shape(y)
+    
+    yCopyArr = np.copy(y)
+    yLastIdxArrCopy = np.copy(yColIdxs)
+    foundCount = 0
+    for i in range(rows):
+        if not np.any(y[i, :] > 0 ):
+            if foundCount == 0:
+                yCopyArr = np.array([y[i,:]])
+                yLastIdxArrCopy = np.array([yColIdxs[i]])
+                foundCount +=1
+            else:
+                yCopyArr = np.vstack([yCopyArr, y[i, :]])
+                yLastIdxArrCopy = np.vstack([yLastIdxArrCopy, yColIdxs[i]])
+                foundCount += 1
+    
+    return yCopyArr, yLastIdxArrCopy
+
+def stripS(s):
+    sCopy = np.copy(s)
+    foundCount = 0
+    for j in range(np.shape(s)[0]):
+        if s[j] !=-9 and foundCount == 0:
+            sCopy = np.array([s[j]])
+            foundCount += 1
+        elif s[j] != 9 and foundCount > 0:
+            sCopy = np.hstack([sCopy,s[j]])
+
+    return sCopy
+
+
 # In[117]:
+
+#helper to find subarray s in prevseqs
+def checkIfSInPrevSeqs(s, prevSeqs):
+    for arr in prevSeqs:
+        if np.array_equal(s,arr):
+            return True
+
+    return False
 
 
 # expectation-maximization procedure to estimate s and M iteratively (algorithm 2 in the paper)
@@ -190,18 +231,22 @@ def estimate(x, s, gM, M, D, y, N, BEGIN, END):
     s, y, yLastIdxArr = estsources(x, D, N, gM, BEGIN, END) # start with an estimate of s computed from the global model gM
     its = 0
     #quit when source sequence is already seen
-    while s not in prevsseqs:
+    while True:
+        sInPrevSeqs = checkIfSInPrevSeqs(s, prevsseqs)
+        if sInPrevSeqs:
+            break
+
         its += 1
         print('#{0}: Estimating parameters...'.format(its))
         M = estparams(D, y, yLastIdxArr, BEGIN, END) # update transition matrix M
-        prevsseqs.append(s[:])
+        prevsseqs.append(np.copy(s))
         print('#{0}: Computing source sequence...'.format(its))
-        s, y = estsources(x, D, N, M, BEGIN, END) # use current M to re-estimate s
+        s, y, yLastIdxArr = estsources(x, D, N, M, BEGIN, END) # use current M to re-estimate s
     print('done estimate\n')
     #print(f's: \n{s}\n')
     #print(f'y: \n{y}')
    
-    return len(set(s)), M, y
+    return len(set(s)), M, y, yLastIdxArr
 
 
 # In[122]:
@@ -217,21 +262,20 @@ def estsources(x, D, N, T, BEGIN, END):
     
     '''
     #s = []
-    s = np.full((numSymbols, 1), -9, dtype=np.int)
+    s = np.full((len(x)), -9, dtype=np.int)
     sIdx = 0
     # list of lists
     #y = []
     # from formula 2^n - 1
     numSetsPossible = (2**len(D)) -1 
-    y = np.full((numSetsPossible, numSetsPossible), -9, dtype=np.int)
+    y = np.full((numSetsPossible, len(x)), -9, dtype=np.int)
     # tracks how many elements are added to each row of array
-    yLastIdxArr = np.full((numSetsPossible), -9, dtype=np.int)
-    lenY = 0 # tracks which row I'm adding sn to
+    yColIdxs = np.zeros((numSetsPossible), dtype=np.int)
+    yRowIdx = 0 # tracks which row of y I'm adding sn to
     #y.append([])
     # set but now list use if x in active
-    maxLenActive = 2**numSymbols
     activeIdx = 0 # track where to insert next in active
-    active = np.full((maxLenActive), -9, dtype=np.int)
+    active = np.full((numSetsPossible), -9, dtype=np.int)
     for n in range(0,N):
         #print(f'top leny: {len(y)}\n')
 
@@ -242,15 +286,9 @@ def estsources(x, D, N, T, BEGIN, END):
             if xn in y[k, :]: #, :]:
                 continue
             # check index
-            
-            if yLastIdxArr[k] == -9:
-                yLastIdxArr[k] = 1
-            else:
-                yLastIdxArr[k]  += 1
+           
             #a = y[k][-1] # worked with lists y[k][-1] not knowing how many elements are in sublist, need to track how many in array
-            lastIdx = yLastIdxArr[k]-1
-            print(f'k:{k}, lastIdx: {lastIdx}')
-            a = y[k, lastIdx]
+            a = y[k, yColIdxs[k]]
             b = xn
             p = T[a,b]
             if p > pmax:
@@ -258,29 +296,22 @@ def estsources(x, D, N, T, BEGIN, END):
                 pmax = p
         if sn == -1 or T[BEGIN, xn] > pmax:
             # making y longer by one subarray
+            if yRowIdx == 0:
+                yRowIdx += 1
+                sn = yRowIdx
+            else:
+                sn = yRowIdx
             
-            if lenY == 0:
-                lenY+=1
-                sn = lenY
-            else:
-                sn = lenY
-            '''
-            if len(y) == 0:
-                sn = len(y) + 1
-            else:
-                sn = len(y)
-            '''
             if sn not in active:
                 active[activeIdx] = sn
                 activeIdx += 1
                 #active.append(sn)
             if sn == 1:
-                lenY+=1
-                lenY+=1
+                yRowIdx+=2
                 #y.append([])
                 #y.append([])
             else:
-                lenY+=1
+                yRowIdx+=1
                 #y.append([])
         #print(f'bottom leny: {len(y)}\n')
         #print(f'sn: {sn}\n')
@@ -288,9 +319,9 @@ def estsources(x, D, N, T, BEGIN, END):
         sIdx += 1
         #s.append(sn)
         #print(f'y:\n{y}\n')
-        idxToInsertTo = yLastIdxArr[sn]
-        yLastIdxArr[sn] += 1
-        y[sn, idxToInsertTo] = xn
+
+        y[sn, yColIdxs[sn]] = xn
+        yColIdxs[sn] += 1
 
         #y[sn].append(xn)
         pnext = 0.0
@@ -303,23 +334,27 @@ def estsources(x, D, N, T, BEGIN, END):
                 bnext = b
         if bnext == END:
             active = [x for x in active if x != sn]
-        #print(f's: {s}\n')
-        print(f'y: {y}\n')
-        print('len active: ', len(active))
-        print('active: ', active)
+    
+    print('before strip\n')
+    print(f's:\n' ,s)
+    print(f'y:\n', y)
+    print(f'yColIdxs: \n', yColIdxs)
+    print('active:\n ', active)
+
 
     #take out the empty list in y
     rows, _ = np.shape(y)
 
-    for i in range(rows):
-        if not np.any(y[i, :] > 0 ):
-            y = np.delete(y, (i), axis=0)
-            yLastIdxArr = np.delete(yLastIdxArr, (i), axis=0)
-    
-    #y = [x for x in y if x != []]
-    print('num rows y: ', rows)
-        
-    return s, y, yLastIdxArr
+    y, yColIdxs = stripYAndYColIdxsArrs(y, yColIdxs)
+
+    s = stripS(s)
+
+    print('after strip\n')
+    print(f's:\n' ,s)
+    print(f'y:\n', y)
+    print(f'yColIdxs: \n', yColIdxs)
+
+    return s, y, yColIdxs
             
     
 
@@ -329,7 +364,7 @@ def estsources(x, D, N, T, BEGIN, END):
 
 def estparams(D,y, yLastIdxArr, BEGIN, END):
     M = np.zeros((len(D), len(D)), dtype=np.float32)
-    rowsY, colsY = np.shape(y)
+    rowsY, _ = np.shape(y)
     numYs = np.shape(yLastIdxArr)[0]
     #iter sublists
     for k in range(numYs):
@@ -338,7 +373,7 @@ def estparams(D,y, yLastIdxArr, BEGIN, END):
         #b = y[k][0]
         M[a,b] += 1.0
         for r in range(0, rowsY-1): # was N-1
-            if (r == -9) or ((r+1) == -9):
+            if (y[k,r] == -9) or ((y[k,r+1]) == -9):
                 break
             
             a = y[k, r]
@@ -513,14 +548,16 @@ if __name__=="__main__":
     print(f'y:{y}\n')
     print(f'N:{N}\n')
 
-    K, M, y = estimate(newX, s, gM, M, newD, y, N, BEGIN, END)
+    K, M, y, ylastIdxArr = estimate(newX, s, gM, M, newD, y, N, BEGIN, END)
     
     #translate y back to chars
     newY = []
-    for i in range(len(y)):
-        subarr = y[i]
+    for i in range(np.shape(y)[0]):
+        subarr = y[i, :]
         newsub = []
         for num in subarr:
+            if num == -9:
+                break
             newsub.append(revDdict[num])
         newY.append(newsub)
 

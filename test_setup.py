@@ -101,6 +101,15 @@ def test_buildGM():
     assert np.allclose(normGM, normSol)
 
 
+def test_estsources():
+
+
+    s, y, yColIdxs = estsources(startIntsX, startIntsD, N, gmStartArr, 0, 9):
+
+    assert s = 
+    assert y = 
+
+
 def test_estimate():
     
     #K = 23, 
@@ -115,12 +124,16 @@ def test_estimate():
     YSolution = YSolutionArr
     MSol = MSolArr
     
-
-    K,M,y = estimate(startIntsX, s, gmStartArr, gmStartArr, 
+    #def estimate(x, s, gM, M, D, y, N, BEGIN, END):
+    K,M,y, ylastIdxArr = estimate(startIntsX, s, gmStartArr, gmStartArr, 
                                 startIntsD, y, N, 0, 9)
 
     
-    assert K == KSolution
+    #assert K == KSolution
+
+    print('M:\n')
+    print(np.array2string(M, separator=","))
+
     assert np.allclose(M, MSolArr)
 
     assert sublistsEqual(YSolution, y)

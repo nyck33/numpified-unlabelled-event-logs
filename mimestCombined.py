@@ -142,6 +142,39 @@ def printmodel(T, D):
 				print('{0:.2f}'.format(T[a][b]).ljust(5), end=' ')
 		print()
 
+
+# expectation-maximization procedure to estimate s and M iteratively (algorithm 2 in the paper)
+def estimate(x, s, gM, M, D, y, N):
+	
+	print('start estimate\n')
+	print('x: ', x)
+	print('s: ', s)
+	print('gM: ', gM)
+	print('N: ', M)
+	print('D: ', D)
+	print('y: ', y)
+	print('N: ', N)
+	print('BEGIN', BEGIN)
+	print('END: ', END)
+
+	prevsseqs = []
+	print('Initializing source sequence...')
+    #gM = param T
+	s, y = estsources(x, D, N, gM) # start with an estimate of s computed from the global model gM
+	its = 0
+	while s not in prevsseqs:
+		its += 1
+		print('#{0}: Estimating parameters...'.format(its))
+		M = estparams(D, y) # update transition matrix M
+		prevsseqs.append(s[:])
+		print('#{0}: Computing source sequence...'.format(its))
+		s, y = estsources(x, D, N, M) # use current M to re-estimate s
+	print('done estimate\n')
+	print(f's: \n{s}\n')
+	print(f'y: \n{y}')
+
+	return len(set(s)), M
+
 # estimate the source sequence s from a given transition matrix T (algorithm 1 in the paper)
 def estsources(x, D, N, T):
 	'''
@@ -220,25 +253,7 @@ def estparams(D, y):
 	return normM
 
 
-# expectation-maximization procedure to estimate s and M iteratively (algorithm 2 in the paper)
-def estimate(x, s, gM, M, D, y, N):
-	prevsseqs = []
-	print('Initializing source sequence...')
-    #gM = param T
-	s, y = estsources(x, D, N, gM) # start with an estimate of s computed from the global model gM
-	its = 0
-	while s not in prevsseqs:
-		its += 1
-		print('#{0}: Estimating parameters...'.format(its))
-		M = estparams(D, y) # update transition matrix M
-		prevsseqs.append(s[:])
-		print('#{0}: Computing source sequence...'.format(its))
-		s, y = estsources(x, D, N, M) # use current M to re-estimate s
-	print('done estimate\n')
-	print(f's: \n{s}\n')
-	print(f'y: \n{y}')
 
-	return len(set(s)), M
 
 # computes the probability distribution for the different sequences produced by this model (p(z) or q(z) in the paper)
 def seqprobs(y):
