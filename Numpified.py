@@ -337,9 +337,10 @@ def estsources(x, D, N, T, BEGIN, END):
         
         #for test return after n iterations
         testIters = 1
+        '''
         if n > testIters:
             return s, y, yColIdxs
-
+        '''
     
     print('before strip\n')
     printArray(s, "s")
