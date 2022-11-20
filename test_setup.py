@@ -104,10 +104,14 @@ def test_buildGM():
 def test_estsources():
 
 
-    s, y, yColIdxs = estsources(startIntsX, startIntsD, N, gmStartArr, 0, 9):
+    s, y, yColIdxs = estsources(startIntsX, startIntsD, N, gmStartArr, 0, 9)
+    print("s:\n", s)
+    assert s == sArr1
 
-    assert s = 
-    assert y = 
+    print("y:\n", y)
+    assert y == yArr1
+
+
 
 
 def test_estimate():

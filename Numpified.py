@@ -269,7 +269,7 @@ def estsources(x, D, N, T, BEGIN, END):
     # from formula 2^n - 1
     numSetsPossible = (2**len(D)) -1 
     y = np.full((numSetsPossible, len(x)), -9, dtype=np.int)
-    # tracks how many elements are added to each row of array
+    # tracks the current -1 last idx of rows
     yColIdxs = np.zeros((numSetsPossible), dtype=np.int)
     yRowIdx = 0 # tracks which row of y I'm adding sn to
     #y.append([])
@@ -333,26 +333,33 @@ def estsources(x, D, N, T, BEGIN, END):
                 pnext = T[xn,b] # was T[xn][b]
                 bnext = b
         if bnext == END:
-            active = [x for x in active if x != sn]
+            active = np.array([x for x in active if x != sn])
+        
+        #for test return after n iterations
+        testIters = 1
+        if n > testIters:
+            return s, y, yColIdxs
+
     
     print('before strip\n')
-    print(f's:\n' ,s)
-    print(f'y:\n', y)
-    print(f'yColIdxs: \n', yColIdxs)
-    print('active:\n ', active)
+    printArray(s, "s")
+    printArray(y, "y")
+    printArray(yColIdxs, "yColdIdxs")
+    printArray(active, "active")
 
 
     #take out the empty list in y
-    rows, _ = np.shape(y)
 
     y, yColIdxs = stripYAndYColIdxsArrs(y, yColIdxs)
 
     s = stripS(s)
 
     print('after strip\n')
-    print(f's:\n' ,s)
-    print(f'y:\n', y)
-    print(f'yColIdxs: \n', yColIdxs)
+    printArray(s, "s")
+    printArray(y, "y")
+    printArray(yColIdxs, "yColdIdxs")
+    printArray(active, "active")
+
 
     return s, y, yColIdxs
             
