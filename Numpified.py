@@ -221,6 +221,9 @@ def estimate(x, s, gM, M, D, y, N, BEGIN, END):
     print('BEGIN', BEGIN)
     print('END: ', END)
 
+    # for test
+    #return gM, M, D, x
+
     
 
     ###########################################################################################
@@ -282,18 +285,20 @@ def estsources(x, D, N, T, BEGIN, END):
         xn = x[n]
         pmax = 0.0
         sn = -1
-        for k in active:
-            if xn in y[k, :]: #, :]:
-                continue
-            # check index
-           
-            #a = y[k][-1] # worked with lists y[k][-1] not knowing how many elements are in sublist, need to track how many in array
-            a = y[k, yColIdxs[k]]
-            b = xn
-            p = T[a,b]
-            if p > pmax:
-                sn = k
-                pmax = p
+        if np.any(active[:] > 0): # -9's means empty
+            for k in active:
+                if xn in y[k, :]: #, :]:
+                    continue
+                # check index
+            
+                #a = y[k][-1] # worked with lists y[k][-1] not knowing how many elements are in sublist, need to track how many in array
+                a = y[k, yColIdxs[k]]
+                b = xn
+                p = T[a,b]
+                if p > pmax:
+                    sn = k
+                    pmax = p    
+        
         if sn == -1 or T[BEGIN, xn] > pmax:
             # making y longer by one subarray
             if yRowIdx == 0:
@@ -545,17 +550,9 @@ if __name__=="__main__":
     # x is ints, D is ints, y is ints, gM and M keys are ints
     # 
 
-    print("Calling Estimate:\n")
-    print(f'X: {x}\n')
-    print(f'newX: {newX}\n')
-    print(f's: {s}\n')
-    print(f'gM: {gM}\n')
-    print(f'M:{M}\n')
-    print(f'D: {D}\n')
-    print(f'newD:{newD}\n')
-    print(f'y:{y}\n')
-    print(f'N:{N}\n')
+    
 
+    #estimate(x, s, gM, M, D, y, N, BEGIN, END):
     K, M, y, ylastIdxArr = estimate(newX, s, gM, M, newD, y, N, BEGIN, END)
     
     #translate y back to chars

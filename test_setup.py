@@ -101,15 +101,115 @@ def test_buildGM():
     assert np.allclose(normGM, normSol)
 
 
+def test_estimate_start():
+    '''
+    call everything in main and check inputs to estimate
+    '''
+        
+    BEGIN = 'o'
+    END = 'x'
+    # read symbol sequence x from stdin, with one symbol per line
+    x = []
+
+    #filename = "mocksequence.txt"
+    filename = "sequence.txt"
+
+    with open(filename, mode="r") as f:
+        lines = f.readlines()
+        for line in lines:
+            symbol = line.strip()
+            if len(symbol) > 0:
+                x += [symbol]
+    
+
+    # print the sequence as string
+    print('raw x: ', x)
+    print("Symbol sequence: ", seq2str(x))
+
+    print("({0} symbols)".format(len(x)))
+
+    N = len(x)
+    #################################################################
+    # call init funcs
+    # list
+    D = initializeD(x, BEGIN, END)
+    print(f'D: {D}')
+    #dictionary of alpha: integer index into array
+    Ddict = {D[i]:i for i in range(len(D))}
+    revDdict = {i:D[i] for i in range(len(D))}
+    #translate x sequence into integers
+    newX = translateXToInts(x, Ddict)
+    print(f'newX: {newX}')
+    
+    #translate D to newD ints
+    newD = translateXToInts(D, Ddict)
+    print(f'newD: {newD}')
+
+    print(f'Ddict: {Ddict}')
+    # only uses len of D so okay
+    gM = initializeGM(D)
+    print(f'gM:\n {gM}')
+    gM = buildGM(newX,gM, len(x))
+    print(f'gM:\n {gM}')
+    gM = normalizeGM(gM)
+    print(f'gM:\n {gM}')
+    
+    M = np.zeros(np.shape(gM))
+    s = [] # the source sequence s (to be determined)
+    
+    # max number of symbols in any value list is len(D)
+    #{int: [unique symbols]}, use list of lists
+    #y = dict() # the separate source sequences (y^{(k)} in the paper)
+    '''
+    most number of entries in y is going to be the number of permutations of the set of symbols D
+    https://math.stackexchange.com/a/1193956/635903
+    2^n - 1
+
+    '''
+    numSymbols = len(D)
+    numSetsFromD = (2**numSymbols) - 1
+    print('num sets from symbols: ', numSetsFromD)
+
+    #y = []
+    y = np.full((numSetsFromD, len(x)), -9, dtype=np.int)
+
+    # estimate model, with all above member variables
+    
+    BEGIN = Ddict['o']
+    END = Ddict['x']
+
+    # x is ints, D is ints, y is ints, gM and M keys are ints
+    # 
+    M = np.zeros(np.shape(gM))
+
+    '''
+    gM, M, D, x = estimate(newX, s, gM, M, newD, y, N, BEGIN, END)
+
+    
+    assert np.allclose(gM, gmStartArr)
+    assert np.shape(gM) == np.shape(gmStartArr)
+    
+    assert np.shape(M) == np.shape(gmStartArr)
+
+    printArray(M, "M")
+
+    assert np.allclose(M, MStart, atol=1e-03)
+    assert D == startIntsD
+    assert x == startIntsX
+    '''
+    
+
 def test_estsources():
 
 
     s, y, yColIdxs = estsources(startIntsX, startIntsD, N, gmStartArr, 0, 9)
     print("s:\n", s)
-    assert s == sArr1
+    assert np.allclose(s, sArr1)
 
     print("y:\n", y)
-    assert y == yArr1
+    assert np.allclose(y, yArr1)
+
+
 
 
 
